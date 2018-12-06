@@ -8,27 +8,20 @@
 % Facts
 %!
 
+passenger("Mathias", "Hansen", "070195").
 country("Canada").
 country("Denmark").
-
 iata("YYZ").
 iata("BIL").
-
 city("Toronto").
 city("Billund").
-
 airport("YYZ", "Toronto", "Canada").
 airport("BIL", "Billund", "Denmark").
 airport("LAX", "Los Angeles", "USA").
-
 weather("YYZ", "Thunderstorm").
 weather("BIL", "Clear").
-
-passenger("Mathias", "Hansen", "070195").
-passport("Mathias", "Hansen", "070195", "Denmark").
-
 visaagreement("Denmark", "Canada").
-
+passport("Mathias", "Hansen", "070195", "Denmark").
 reservation("AAA", "Mathias", "Hansen", "070195", "BIL", "YYZ", "1A").
 reservation("BBB", "Mathias", "Hansen", "070195", "YYZ", "LAX", "9Z").
 reservation("CCC", "Mathias", "Hansen", "070195", "BIL", "YYZ", "4F").
