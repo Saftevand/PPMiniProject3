@@ -41,33 +41,37 @@ Airport("YYZ", "Toronto", "Canada").
 Airport("BIL", "Billund", "Denmark").
 Airport("LAX", "Los Angeles", "USA").
 
-Weather("YYZ", "Clear").
+Weather("YYZ", "Windy").
 Weather("BIL", "Windy").
-Weather("LAX", "Cloudy").
+Weather("LAX", "Windy").
 
 Passenger("Mathias", "Hansen", "070195").
 Passenger("John", "Doe", "021287").
 Passenger("Poul", "Kvist", "111145").
 
 Passport("Mathias", "Hansen", "070195", "Denmark").
-Passport("John", "Doe", "021287", "Yemen").
+Passport("John", "Doe", "021287", "Canada").
 Passport("Poul", "Kvist", "111145", "Denmark").
+Passport("Poul", "Kvist", "111145", "Yemen").
 
 Visaagreement("Denmark", "Canada").
+Visaagreement("Canada", "Denmark").
 Visaagreement("Denmark", "USA").
+Visaagreement("USA", "Denmark").
 Visaagreement("USA", "Canada").
+Visaagreement("Canada", "USA").
 
-Reservation("AAA", "Mathias", "Hansen", "070195", "BIL", "YYZ", "1A", "SAS").
-Reservation("SSS", "Poul", "Kvist", "111145", "BIL", "YYZ", "1A", "SAS").
-Reservation("BBB", "Mathias", "Hansen", "070195", "BIL", "LAX", "2A", "SAS").
-Reservation("CCC", "John", "Doe", "021287", "YYZ", "LAX", "1A", "SAS").
+%Reservation("AAA", "Mathias", "Hansen", "070195", "BIL", "YYZ", "1A", "SAS").
+%Reservation("SSS", "Poul", "Kvist", "111145", "BIL", "YYZ", "1A", "SAS").
+%Reservation("BBB", "Mathias", "Hansen", "070195", "BIL", "LAX", "2A", "SAS").
+%Reservation("CCC", "John", "Doe", "021287", "YYZ", "LAX", "1A", "SAS").
 
 Aircraft_type("Light").
 Aircraft_type("Heavy").
 
 Aircraft("OY-JJO", "Airbus A380", "Airbus", "Light").
 Aircraft("OY-ASD", "Airbus A380", "Airbus", "Light").
-Aircraft("OY-QWE", "Airbus A380", "Airbus", "Light").
+Aircraft("OY-QWE", "Airbus A380", "Airbus", "Heavy").
 
 Aircraft_Model("Airbus A380", "1A").
 Aircraft_Model("Airbus A380", "2A").
@@ -81,7 +85,7 @@ Leg("BIL", "YYZ", "SAS", "OY-JJO").
 Leg("YYZ", "LAX", "SAS", "OY-ASD").
 Leg("BIL", "LAX", "SAS", "OY-QWE").
 
-
+Blacklist("USA", "Yemen").
 
 
 
@@ -94,11 +98,11 @@ Leg("BIL", "LAX", "SAS", "OY-QWE").
 % Predicates
 %!
 
-%!Country(Name).
+%!Country(Name) :-Country(Name).
 %!IATA(IATA_code) :- IATA(IATA_code).
 %!Passenger(Name, LastName, Birthdate).
 %!Airline(Name).
-%!Accepted_weather(Weathertype).
+
 
 Airport(IATA_code, AirportCity, AirportCountry) :-
     Airport(IATA_code, AirportCity, AirportCountry),
@@ -122,6 +126,10 @@ Seat(Seat_Number, Seat_Class) :-
 Weather(IATA_code, Weathertype) :-
     Weather(IATA_code, Weathertype),
     IATA(IATA_code),
+    Weather_type(Weathertype).
+
+Accepted_weather(AircraftType, Weathertype) :-
+    Aircraft_type(AircraftType),
     Weather_type(Weathertype).
 
 Visaagreement(Country1, Country2) :-
@@ -148,22 +156,32 @@ Leg(FromAirport, ToAirport, Airline_name, Aircraft_reg_num) :-
     Aircraft(Aircraft_reg_num, Aircraft_Model, Aircraft_manufactor, AircraftType),
     FromAirport != ToAirport.
 
-Route(FromAirport, ToAirport) :-
-    Leg(FromAirport, ToAirport, Airline_name, Aircraft_reg_num),
-    IATA(FromAirport),
-    IATA(ToAirport).
+Blacklist(Country_name, Blacklisted) :-
+    Blacklist(Country_name, Blacklisted),
+    Country(Country_name),
+    Country(Blacklisted).
 
-Route(FromAirport, ToAirport) :-
-    Route(FromAirport, StopOverAirport),
-    Route(StopOverAirport, ToAirport),
-    IATA(FromAirport),
-    IATA(StopOverAirport),
-    IATA(ToAirport),
-    FromAirport != ToAirport.
+%Route(FromAirport, ToAirport) :-
+%    Leg(FromAirport, ToAirport, Airline_name, Aircraft_reg_num),
+%    IATA(FromAirport),
+%    IATA(ToAirport).
+
+%Route(FromAirport, ToAirport) :-
+%    Route(FromAirport, StopOverAirport),
+%    Route(StopOverAirport, ToAirport),
+%    IATA(FromAirport),
+%    IATA(StopOverAirport),
+%    IATA(ToAirport),
+%    FromAirport != ToAirport.
 
 
 
 %! Problem 3
+Airports_to_fly_to(PName, PLastName, PBirthdate, Destination) :-
+    Passenger(PName, PLastName, PBirthdate),
+    Passport(PName, PLastName, PBirthdate, FromCountry),
+    Airport(Destination, AirportCity, FromCountry).
+
 Airports_to_fly_to(PName, PLastName, PBirthdate, Destination) :-
     Passenger(PName, PLastName, PBirthdate),
     Passport(PName, PLastName, PBirthdate, FromCountry),
@@ -188,25 +206,66 @@ Double_bookings(BookingCode, Aircraft_reg_num) :-
     BookingCode != BookingCode2.
 
 %! Problem 6
-Permitted_to_takeoff(Aircraft_reg_num, FromAirport, ToAirport) :-
+Permitted_to_takeoff(Aircraft_reg_num) :-
     Leg(FromAirport, ToAirport, Airline_name, Aircraft_reg_num),
     Weather(ToAirport, ToAirport_weather),
     Weather(FromAirport, FromAirport_weather),
     Aircraft(Aircraft_reg_num, AircraftModel, Aircraft_manufactor, AircraftType),
-    Accepted_weather(AircraftType ,FromAirport_weather),
+    Accepted_weather(AircraftType, FromAirport_weather),
     Accepted_weather(AircraftType, ToAirport_weather),
     not Double_bookings(BookingCode, Aircraft_reg_num),
     Reservation(BookingCode, Pname, Plastname, Pbirthdate, FromAirport, ToAirport, SeatNumber, Airline_name),
     not Illegal_passengers(Pname, Plastname, Pbirthdate).
 
-%!Problem 7
+%! Problem 7
 Closed_airports(IATA_code) :-
+    Closed_airportsFrom(IATA_code),
+    Closed_airportsTo(IATA_code).
+
+Closed_airportsFrom(IATA_code) :-
     IATA(IATA_code),
-    Leg(FromAirport, ToAirport, Airline_name, Aircraft_reg_num),
+    Leg(IATA_code, ToAirport, Airline_name, Aircraft_reg_num),
     Aircraft(Aircraft_reg_num, AircraftModel, Aircraft_manufactor, AircraftType),
-    Weather(IATA, Airport_weather),
-    Accepted_weather(AircraftType, Airport_weather).
-%! ^ Virker ikke endnu ^
+    Weather(IATA_code, Airport_weather),
+    not Accepted_weather(AircraftType, Airport_weather).
+
+Closed_airportsTo(IATA_code) :-
+    IATA(IATA_code),
+    Leg(FromAirport, IATA_code, Airline_name, Aircraft_reg_num),
+    Aircraft(Aircraft_reg_num, AircraftModel, Aircraft_manufactor, AircraftType),
+    Weather(IATA_code, Airport_weather),
+    not Accepted_weather(AircraftType, Airport_weather).
+
+
+%! Problem 8
+Can_book_flight(Pname, Plastname, Pbirthdate, FromAirport, ToAirport) :-
+    Airports_to_fly_to(Pname, Plastname, Pbirthdate, ToAirport),
+    Leg(FromAirport, ToAirport, Airline_name, Aircraft_reg_num),    
+    Aircraft(Aircraft_reg_num, AircraftModel, Aircraft_manufactor, AircraftType),
+    Aircraft_Model(AircraftModel, SeatNumber),
+    Available_seats(SeatNumber, FromAirport, ToAirport, Airline_name).
+
+Can_book_flight(Pname, Plastname, Pbirthdate, FromAirport, ToAirport) :-
+    Can_book_flight(Pname, Plastname, Pbirthdate, FromAirport, LayoverAirport),
+    Can_book_flight(Pname, Plastname, Pbirthdate, LayoverAirport, ToAirport).
+
+Taken_seats(SeatNumber, FromAirport, ToAirport, Airline_name) :-
+    Reservation(BookingCode, Pname, Plastname, Pbirthdate, FromAirport, ToAirport, SeatNumber, Airline_name), 
+    Seat(SeatNumber, SeatClass).
+
+Available_seats(SeatNumber, FromAirport, ToAirport, Airline_name) :-
+    not Taken_seats(SeatNumber, FromAirport, ToAirport, Airline_name),
+    Leg(FromAirport, ToAirport, Airline_name, Aircraft_reg_num),
+    Seat(SeatNumber, SeatClass).
+
+%! Problem 9
+Airports_to_fly_to_blacklist(IATA_code, Pname, Plastname, PBirthdate, FromCountry) :-
+    Passenger(Pname, Plastname, PBirthdate),
+    Passport(Pname, Plastname, Pbirthdate, FromCountry),
+    Airports_to_fly_to(Pname, Plastname, Pbirthdate, IATA_code),
+    Airport(IATA_code, AirportCity, ToCountry),
+    not Blacklist(ToCountry, FromCountry).
+
 
 %! ['E:/Repositories/P7/PPMiniProject3/mlha15_program.pl'].
 %! dlv.mingw.exe mlha15_program.dl -filter=Country
