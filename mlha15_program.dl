@@ -51,13 +51,13 @@ Weather("LAX", "Windy").
 Passenger("Mathias", "Hansen", "070195").
 Passenger("John", "Doe", "021287").
 Passenger("Poul", "Kvist", "111145").
-Passenger("K", "L", "1231232").
+Passenger("Karen", "Lausen", "121280").
 
 Passport("Mathias", "Hansen", "070195", "Denmark").
 Passport("John", "Doe", "021287", "Canada").
 Passport("Poul", "Kvist", "111145", "Denmark").
 Passport("Poul", "Kvist", "111145", "Yemen").
-Passport("K", "L", "1231232", "Yemen").
+Passport("Karen", "Lausen", "121280", "Yemen").
 
 Visaagreement("Denmark", "Canada").
 Visaagreement("Canada", "Denmark").
@@ -69,7 +69,7 @@ Visaagreement("Canada", "USA").
 Reservation("AAA", "Mathias", "Hansen", "070195", "BIL", "YYZ", "1A", "SAS").
 Reservation("SSS", "Poul", "Kvist", "111145", "BIL", "YYZ", "1A", "SAS").
 Reservation("III", "John", "Doe", "021287", "BIL", "YYZ", "2A", "SAS").
-Reservation("QQQ", "K", "L", "1231232", "BIL", "YYZ", "3A", "SAS").
+Reservation("QQQ", "Karen", "Lausen", "1231232", "BIL", "YYZ", "3A", "SAS").
 Reservation("BBB", "Mathias", "Hansen", "070195", "BIL", "LAX", "2A", "SAS").
 Reservation("CCC", "John", "Doe", "021287", "YYZ", "LAX", "1A", "SAS").
 
