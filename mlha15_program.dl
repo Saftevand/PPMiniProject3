@@ -2,7 +2,10 @@
 % Author         : Mathias Lundhede Hansen
 % Mail           : mlha15@student.aau.dk
 % Student number : 20154238
+%
+% I have used the dlv engine for this miniproject
 %!
+
 
 %!
 % Facts
@@ -48,11 +51,13 @@ Weather("LAX", "Windy").
 Passenger("Mathias", "Hansen", "070195").
 Passenger("John", "Doe", "021287").
 Passenger("Poul", "Kvist", "111145").
+Passenger("K", "L", "1231232").
 
 Passport("Mathias", "Hansen", "070195", "Denmark").
 Passport("John", "Doe", "021287", "Canada").
 Passport("Poul", "Kvist", "111145", "Denmark").
 Passport("Poul", "Kvist", "111145", "Yemen").
+Passport("K", "L", "1231232", "Yemen").
 
 Visaagreement("Denmark", "Canada").
 Visaagreement("Canada", "Denmark").
@@ -61,15 +66,17 @@ Visaagreement("USA", "Denmark").
 Visaagreement("USA", "Canada").
 Visaagreement("Canada", "USA").
 
-%Reservation("AAA", "Mathias", "Hansen", "070195", "BIL", "YYZ", "1A", "SAS").
-%Reservation("SSS", "Poul", "Kvist", "111145", "BIL", "YYZ", "1A", "SAS").
-%Reservation("BBB", "Mathias", "Hansen", "070195", "BIL", "LAX", "2A", "SAS").
-%Reservation("CCC", "John", "Doe", "021287", "YYZ", "LAX", "1A", "SAS").
+Reservation("AAA", "Mathias", "Hansen", "070195", "BIL", "YYZ", "1A", "SAS").
+Reservation("SSS", "Poul", "Kvist", "111145", "BIL", "YYZ", "1A", "SAS").
+Reservation("III", "John", "Doe", "021287", "BIL", "YYZ", "2A", "SAS").
+Reservation("QQQ", "K", "L", "1231232", "BIL", "YYZ", "3A", "SAS").
+Reservation("BBB", "Mathias", "Hansen", "070195", "BIL", "LAX", "2A", "SAS").
+Reservation("CCC", "John", "Doe", "021287", "YYZ", "LAX", "1A", "SAS").
 
 Aircraft_type("Light").
 Aircraft_type("Heavy").
 
-Aircraft("OY-JJO", "Airbus A380", "Airbus", "Light").
+Aircraft("OY-JJO", "Airbus A380", "Airbus", "Heavy").
 Aircraft("OY-ASD", "Airbus A380", "Airbus", "Light").
 Aircraft("OY-QWE", "Airbus A380", "Airbus", "Heavy").
 
@@ -85,24 +92,21 @@ Leg("BIL", "YYZ", "SAS", "OY-JJO").
 Leg("YYZ", "LAX", "SAS", "OY-ASD").
 Leg("BIL", "LAX", "SAS", "OY-QWE").
 
-Blacklist("USA", "Yemen").
-
-
-
-
-
-
+Blacklist("Denmark", "Yemen").
 
 
 %!
 % Predicates
 %!
 
-%!Country(Name) :-Country(Name).
-%!IATA(IATA_code) :- IATA(IATA_code).
-%!Passenger(Name, LastName, Birthdate).
-%!Airline(Name).
-
+Country(Name) :-
+    Country(Name).
+IATA(IATA_code) :- 
+    IATA(IATA_code).
+Passenger(Name, LastName, Birthdate) :-
+    Passenger(Name, LastName, Birthdate).
+Airline(Name) :-
+    Airline(Name).
 
 Airport(IATA_code, AirportCity, AirportCountry) :-
     Airport(IATA_code, AirportCity, AirportCountry),
@@ -161,27 +165,22 @@ Blacklist(Country_name, Blacklisted) :-
     Country(Country_name),
     Country(Blacklisted).
 
-%Route(FromAirport, ToAirport) :-
-%    Leg(FromAirport, ToAirport, Airline_name, Aircraft_reg_num),
-%    IATA(FromAirport),
-%    IATA(ToAirport).
 
-%Route(FromAirport, ToAirport) :-
-%    Route(FromAirport, StopOverAirport),
-%    Route(StopOverAirport, ToAirport),
-%    IATA(FromAirport),
-%    IATA(StopOverAirport),
-%    IATA(ToAirport),
-%    FromAirport != ToAirport.
-
-
+%!
+% The problems
+%!
 
 %! Problem 3
+%  There are two ways for a passenger to be allowed to fly to an airport;
+%  One is if you are from the same country as the airport, and the other 
+%  is if your country has a visaagreement with the airports country.
+%! The below rule checks if the passenger is from the same country as the airport
 Airports_to_fly_to(PName, PLastName, PBirthdate, Destination) :-
     Passenger(PName, PLastName, PBirthdate),
     Passport(PName, PLastName, PBirthdate, FromCountry),
     Airport(Destination, AirportCity, FromCountry).
 
+%! The below rule checks if the passengers country has a visaagreement with the airports country
 Airports_to_fly_to(PName, PLastName, PBirthdate, Destination) :-
     Passenger(PName, PLastName, PBirthdate),
     Passport(PName, PLastName, PBirthdate, FromCountry),
@@ -189,14 +188,18 @@ Airports_to_fly_to(PName, PLastName, PBirthdate, Destination) :-
     Visaagreement(FromCountry, ToCountry).
 
 %! Problem 4
+%  In the below rule we look at the reservations and the airports that a passenger cannot fly to,
+%  and if a passenger appears in a reservation for an airport he is not allowed to fly to,
+%! then he must be an illegal passenger.
 Illegal_passengers(Pname, Plastname, Pbirthdate) :-
     Passenger(Pname, Plastname, Pbirthdate),
     Reservation(Bookingcode, Pname, Plastname, Pbirthdate,  FromAirport, ToAirport, SeatNumber, Airline_name),
-    Passport(Pname, Plastname, Pbirthdate, FromCountry),
-    Airport(ToAirport, AirportCity, ToCountry),
-    not Visaagreement(FromCountry, ToCountry).
+    not Airports_to_fly_to(Pname, Plastname, Pbirthdate, ToAirport).
+
 
 %! Problem 5
+%  In the below rule we look at two reservations on the same aircraft to see if there is two reservations
+%! for the same seat on the same aircraft on the same leg. 
 Double_bookings(BookingCode, Aircraft_reg_num) :-
     Reservation(BookingCode, Pname, Plastname, Pbirthdate, FromAirport, ToAirport, SeatNumber, Airline_name),
     Reservation(BookingCode2, Pname2, Plastname2, Pbirthdate2, FromAirport2, ToAirport2, SeatNumber2, Airline_name2),    
@@ -206,7 +209,16 @@ Double_bookings(BookingCode, Aircraft_reg_num) :-
     BookingCode != BookingCode2.
 
 %! Problem 6
-Permitted_to_takeoff(Aircraft_reg_num) :-
+%  In the below rule we find the weather in the two airports that a given leg flies between
+%  and then sees if the type of the aircraft can fly in the weather of both airports. 
+%  To make sure that there are no double bookings, we say 'not' on the rule Double_bookings,
+%  and then we also find the double booked flights and then say no aircraft should be in both of them.
+%  The reason that we find both the double booked, and those that are not double booked is that if an
+%  aircraft has a seat that is double booked, and one that isn't, then the aircraft will be cleared for takeoff
+%  if only we said 'not Double_bookings' as is would find the seat that is not double booked.
+%  To check that all passengers are allowed to fly to their destinations we simply say 'not' on the 
+%! illegal passengers, as it will then find all the passengers that are allowed to fly.
+Permitted_to_takeoff(Aircraft_reg_num, BookingCode) :-
     Leg(FromAirport, ToAirport, Airline_name, Aircraft_reg_num),
     Weather(ToAirport, ToAirport_weather),
     Weather(FromAirport, FromAirport_weather),
@@ -214,30 +226,46 @@ Permitted_to_takeoff(Aircraft_reg_num) :-
     Accepted_weather(AircraftType, FromAirport_weather),
     Accepted_weather(AircraftType, ToAirport_weather),
     not Double_bookings(BookingCode, Aircraft_reg_num),
+    Double_bookings(BookingCode2, Aircraft_reg_num2),
+    Aircraft_reg_num != Aircraft_reg_num2,
     Reservation(BookingCode, Pname, Plastname, Pbirthdate, FromAirport, ToAirport, SeatNumber, Airline_name),
     not Illegal_passengers(Pname, Plastname, Pbirthdate).
 
 %! Problem 7
+%  This problem is split into two sub problems, one for finding the legs that fly to the airport
+%  and one that finds the legs that fly from the airport. If a given airport is found in both
+%! subproblems, then that airport is closed.
 Closed_airports(IATA_code) :-
-    Closed_airportsFrom(IATA_code),
-    Closed_airportsTo(IATA_code).
+    Airport(IATA_code, AirportCity, AirportCountry),
+    not Closed_airportsFrom(IATA_code),
+    not Closed_airportsTo(IATA_code).
 
+%!This rule checks all the legs that fly from an airport, in the weather condition of the airport
+%! and then selects those who cannot fly in the weather.
 Closed_airportsFrom(IATA_code) :-
     IATA(IATA_code),
     Leg(IATA_code, ToAirport, Airline_name, Aircraft_reg_num),
     Aircraft(Aircraft_reg_num, AircraftModel, Aircraft_manufactor, AircraftType),
     Weather(IATA_code, Airport_weather),
-    not Accepted_weather(AircraftType, Airport_weather).
+    Accepted_weather(AircraftType, Airport_weather).
 
+%!This rule checks all the legs that fly to an airport, in the weather condition of the airport
+%! and then selects those who cannot fly in the weather.
 Closed_airportsTo(IATA_code) :-
     IATA(IATA_code),
     Leg(FromAirport, IATA_code, Airline_name, Aircraft_reg_num),
     Aircraft(Aircraft_reg_num, AircraftModel, Aircraft_manufactor, AircraftType),
     Weather(IATA_code, Airport_weather),
-    not Accepted_weather(AircraftType, Airport_weather).
+    Accepted_weather(AircraftType, Airport_weather).
 
 
 %! Problem 8
+%  I have modelled this problem the same way as Path from the first excersise session.
+%  So and edge in this case is leg, and the path is the itinerary(I have chosen not to create a predicate for itinerary as it was never used,
+%  so the output just determines where it is possible to create an itinerary to). 
+%  To see if we can make an edge out of a leg, then we need to see if there is any free seats on any of the flights that a passenger can take.
+%! This is done using Available_seats, which puts a 'not' on Taken_seats, which finds all the seats that are occupied.
+
 Can_book_flight(Pname, Plastname, Pbirthdate, FromAirport, ToAirport) :-
     Airports_to_fly_to(Pname, Plastname, Pbirthdate, ToAirport),
     Leg(FromAirport, ToAirport, Airline_name, Aircraft_reg_num),    
@@ -245,6 +273,7 @@ Can_book_flight(Pname, Plastname, Pbirthdate, FromAirport, ToAirport) :-
     Aircraft_Model(AircraftModel, SeatNumber),
     Available_seats(SeatNumber, FromAirport, ToAirport, Airline_name).
 
+%! Then to find the path/itinerary, we use the rule below, so that we can find the itinerary for any airport.
 Can_book_flight(Pname, Plastname, Pbirthdate, FromAirport, ToAirport) :-
     Can_book_flight(Pname, Plastname, Pbirthdate, FromAirport, LayoverAirport),
     Can_book_flight(Pname, Plastname, Pbirthdate, LayoverAirport, ToAirport).
@@ -258,14 +287,16 @@ Available_seats(SeatNumber, FromAirport, ToAirport, Airline_name) :-
     Leg(FromAirport, ToAirport, Airline_name, Aircraft_reg_num),
     Seat(SeatNumber, SeatClass).
 
+
 %! Problem 9
-Airports_to_fly_to_blacklist(IATA_code, Pname, Plastname, PBirthdate, FromCountry) :-
-    Passenger(Pname, Plastname, PBirthdate),
-    Passport(Pname, Plastname, Pbirthdate, FromCountry),
+%  This problem is basicly an extension to problem 3. In order to find the airports a passenger can fly to, with blacklist and dual citizenship
+%  taken in account, I use #count to see if a passenger, who is from a country that is blacklisted, has more than one passport. If they do
+%! then they wont be allowed to fly to the airport. 
+Airports_to_fly_to_incl_blacklist(Pname, Plastname, Pbirthdate, IATA_code) :-
     Airports_to_fly_to(Pname, Plastname, Pbirthdate, IATA_code),
-    Airport(IATA_code, AirportCity, ToCountry),
-    not Blacklist(ToCountry, FromCountry).
+    #count{FromCountry: 
+        Passport(Pname, Plastname, Pbirthdate, FromCountry), 
+        Blacklist(ToCountry, FromCountry), 
+        Airport(IATA_code, AirportCity, ToCountry)} 
+    <1.
 
-
-%! ['E:/Repositories/P7/PPMiniProject3/mlha15_program.pl'].
-%! dlv.mingw.exe mlha15_program.dl -filter=Country
